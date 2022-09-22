@@ -1,5 +1,6 @@
 import csv
 import math
+import sys
 class TF_IDF(object):
     def __init__(self, dataFile):
 
@@ -21,7 +22,6 @@ class TF_IDF(object):
                         self.inverted_index[word].add(row[0])
                     else:
                         self.inverted_index[word] = set(row[0])
-                self.maxDocID += 1
 
     def __del__(self):
         self.f.close()
@@ -30,7 +30,11 @@ class TF_IDF(object):
     # return top k results in decending order
     def tf_idf(self, Q, k):
         relevances = []
-        for i in range(self.maxDocID+1):
+        r = self.maxDocID+1
+        for i in range(r):
+            if i >self.maxDocID:
+                break
+
             rel = [i, self.relevance(i, Q)]
             relevances.append(rel)
         relevances.sort(key=lambda x:x[1])
@@ -41,7 +45,7 @@ class TF_IDF(object):
 
 
             
-    # d = document id as string
+    # d = document id as string ! NEEDS TO BE STRING
     # example query = ‘hello world’, then the query would have two terms, ‘hello’ and ‘world’
     def relevance(self, d, Q):
         sum = 0
@@ -54,9 +58,13 @@ class TF_IDF(object):
         return sum
 
 
-    # d = document id as string
+    # d = document id as string ! NEEDS TO BE STRING
     # t = one term
     def tf(self, d, t):
+        if (d < 0) or (d >self.maxDocID):
+            print(f"d was '{d}' and is out of bounds")
+            sys.exit(1)
+
         split_word_list = self.rows[d+1][1].split(" ")
         split_word_list = list(filter(None, split_word_list))
 
@@ -71,7 +79,12 @@ class TF_IDF(object):
 
     def get_row(self, d):
             rows = list(self.reader)
-            print(d)
-            print(rows[d+1])
             return rows[d+1]
+
+if __name__ == "__main__":
+    t = TF_IDF("wine.csv")
+    t.tf_idf("tremendous tremendous watson", 5)
+    # print(t.relevance(73, "tremendous"))
+    # print(t.tf(0, "wine"))
+    # t.get_row(2)
             
