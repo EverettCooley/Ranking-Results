@@ -1,5 +1,6 @@
 import csv
 import math
+import sys
 class TF_IDF(object):
     def __init__(self, dataFile):
         with open(dataFile, "r") as f:
@@ -10,6 +11,8 @@ class TF_IDF(object):
         self.INVERTED_INDEX = self.create_inverted_index()
 
 
+    # creates the inverted index from dataFile
+    # returned as a dictionary
     def create_inverted_index(self):
         inverted_index = {}
         for row in self.ROWS:
@@ -22,7 +25,13 @@ class TF_IDF(object):
         return inverted_index
                 
 
+    # given a query and k (as an int)
+    # returns a list of the top k relevant documents
     def tf_idf(self, Q, k):
+        if k>self.N_OF_DOCS:
+            print("Try a k less than the number of documents")
+            sys.exit(1)
+            
         relevances = []
         for i in range(self.N_OF_DOCS):
             rel = [i, self.relevance(i, Q)]
@@ -33,10 +42,12 @@ class TF_IDF(object):
         for i in range(len(relevances)-1, len(relevances)-k-1, -1):
             if relevances[i][1] == 0.0:
                 break
-            result.append((relevances[i][0], relevances[i][1]))
+            result.append((str(relevances[i][0]), relevances[i][1]))
         return result
 
     
+    # given a docID and query
+    # returns the relevance of a doc with a given query
     def relevance(self, d, Q):
         split_Q = list(filter(None, Q.split(" ")))
         sum = 0
@@ -46,7 +57,8 @@ class TF_IDF(object):
             sum += tf_value/nt
         return sum
 
-
+    # given a docID and term
+    # returns the tf score of the term in docID
     def tf(self, d, t):
         split_word_list = list(filter(None, self.ROWS[int(d)][1].split(" ")))
         ndt = split_word_list.count(t)
