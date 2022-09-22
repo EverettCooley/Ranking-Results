@@ -1,5 +1,6 @@
 import csv
 import math
+import sys
 class BM_25(object):
     def __init__(self, dataFile):
         self.K1 = 1.2
@@ -14,6 +15,8 @@ class BM_25(object):
         self.INVERTED_INDEX = self.create_inverted_index()
 
 
+    # creates the inverted index from dataFile
+    # returned as a dictionary
     def create_inverted_index(self):
         inverted_index = {}
         for row in self.ROWS:
@@ -25,21 +28,26 @@ class BM_25(object):
                     inverted_index[word] = set(row[0])
         return inverted_index
 
-
+    # takes in a docID
+    # returns the number of term in the document at docID
     def length_of_row(self, docID):
         row = self.ROWS[docID][1].split(" ")
         row = list(filter(None, row))
         return len(row)
 
-
+    # returns the average of all document lengths
     def average_length_of_rows(self):
         sum = 0
         for i in range(self.N_OF_DOCS):
             sum += self.length_of_row(i)
         return sum/self.N_OF_DOCS
 
-
+    # given a quary and k
+    # returns the kth most relevant documents
     def bm25(self, query, k):
+        if k>self.N_OF_DOCS:
+            print("Try a k less than the number of documents")
+            sys.exit(1)
         query_list = list(filter(None, query.split(" ")))
         relevances = []
 
@@ -51,10 +59,12 @@ class BM_25(object):
         for i in range(len(relevances)-1, len(relevances)-k-1, -1):
             if relevances[i][1] == 0.0:
                 break
-            result.append((relevances[i][0], relevances[i][1]))
+            result.append((str(relevances[i][0]), relevances[i][1]))
         return result
 
 
+    # gvien a query as a list and a docID as a string
+    # returns the relevance score of a single docuemnt
     def bm25_single_doc(self, query_list, docID):
         sum = 0
         for term in query_list:
@@ -65,6 +75,8 @@ class BM_25(object):
         return sum
 
 
+    # given a term
+    # returns the inverted inverted doc freq
     def inverted_doc_freq(self, t):
         n = self.N_OF_DOCS
         if t in self.INVERTED_INDEX:
@@ -74,11 +86,8 @@ class BM_25(object):
         return math.log((n-df_t+.5)/(df_t+.5))
     
 
-    def query_term_frequency(self, query_list, t):
-        qft = query_list.count(t)
-        return (((self.K2+1)*qft)/(self.K2+qft))
-
-
+    # given a docID and term as strings
+    # returns the term frequency
     def term_freq(self, docID, t):
         row = list(filter(None, self.ROWS[docID][1].split(" ")))
         ft = row.count(t)
@@ -88,9 +97,16 @@ class BM_25(object):
         return top / bot
 
 
+    # given a query as a list and a term
+    # returns the query term frequency
+    def query_term_frequency(self, query_list, t):
+        qft = query_list.count(t)
+        return (((self.K2+1)*qft)/(self.K2+qft))
+
+
 def main():
     bm = BM_25("wine.csv")
-    print(bm.bm25("tremendous tremendous watson", 5))
+    print(bm.bm25("tremendous tremendous watson", 5000))
     # print(bm.bm25_single_doc(["tremendous", "tremendous", "watson"], 71))
 
 
